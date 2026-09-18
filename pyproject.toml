@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meraki"
+version = "0.1.0"
+description = "A modular and extensible Python backend framework"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "uvicorn",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-asyncio",
+    "httpx"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
