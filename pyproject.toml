@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meraki"
+version = "0.1.0"
+description = "A modular, plugin-based Python backend framework (ASGI)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "sulfurcodes" }]
+keywords = ["web", "framework", "asgi", "plugins"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Framework :: AsyncIO",
+    "Topic :: Internet :: WWW/HTTP",
+]
+dependencies = [
+    "uvicorn>=0.20",
+]
+
+[project.optional-dependencies]
+postgres = ["asyncpg>=0.27"]
+mysql = ["aiomysql>=0.2"]
+sqlserver = ["aioodbc>=0.4"]
+all-db = ["asyncpg>=0.27", "aiomysql>=0.2", "aioodbc>=0.4"]
+test = ["pytest>=7", "httpx>=0.24"]
+
+[project.urls]
+Homepage = "https://github.com/sulfurcodes/Meraki"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
