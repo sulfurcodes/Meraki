@@ -1,8 +1,10 @@
-from typing import Callable
+from typing import Any, Callable, Dict, Optional
 from meraki.core.request import Request
 from meraki.core.response import Response
 from meraki.routing.router import Router
 from meraki.middleware.pipeline import MiddlewarePipeline
+from meraki.plugins.base import Plugin
+from meraki.plugins.manager import PluginManager
 
 class Meraki:
     """
@@ -12,10 +14,24 @@ class Meraki:
     def __init__(self) -> None:
         self.router = Router()
         self.pipeline = MiddlewarePipeline()
+        self.plugin_manager = PluginManager()
+        self.services: Dict[str, Any] = {}
 
     def add_middleware(self, middleware: Callable) -> None:
         """Register a middleware callable."""
         self.pipeline.add(middleware)
+
+    def add_service(self, name: str, service: Any) -> None:
+        """Register a shared service object accessible to handlers/plugins."""
+        self.services[name] = service
+
+    def get_service(self, name: str, default: Optional[Any] = None) -> Optional[Any]:
+        """Retrieve a previously registered service by name."""
+        return self.services.get(name, default)
+
+    def register_plugin(self, plugin: Plugin) -> Plugin:
+        """Register a plugin, giving it access to routes/middleware/services."""
+        return self.plugin_manager.register(plugin, self)
 
     def get(self, path: str) -> Callable:
         return self.router.get(path)
@@ -75,7 +91,17 @@ class Meraki:
         while True:
             message = await receive()
             if message["type"] == "lifespan.startup":
-                await send({"type": "lifespan.startup.complete"})
+                try:
+                    await self.plugin_manager.startup()
+                except Exception as exc:
+                    await send({"type": "lifespan.startup.failed", "message": str(exc)})
+                else:
+                    await send({"type": "lifespan.startup.complete"})
             elif message["type"] == "lifespan.shutdown":
-                await send({"type": "lifespan.shutdown.complete"})
+                try:
+                    await self.plugin_manager.shutdown()
+                except Exception as exc:
+                    await send({"type": "lifespan.shutdown.failed", "message": str(exc)})
+                else:
+                    await send({"type": "lifespan.shutdown.complete"})
                 return
